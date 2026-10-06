@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Amaan Baig</title>
+  <meta name="theme-color" content="#040603">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <style>
+    :root {
+      --bg: #040603;
+      --accent: #AAFF66;
+      --sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+
+      /* Page padding: 40px for now; final sizes to be decided */
+      --pad-y: 40px;   /* top and bottom */
+      --pad-x: 40px;   /* left and right */
+    }
+
+    *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; }
+    body {
+      margin: 0;
+      min-height: 100vh; min-height: 100svh;
+      padding: var(--pad-y) var(--pad-x);
+      background: var(--bg);
+      font-family: var(--sans);
+      -webkit-font-smoothing: antialiased;
+    }
+
+    /* Header: logo in the top-right corner */
+    .site-header { display: flex; justify-content: flex-end; }
+    .logo {
+      color: var(--accent); text-decoration: none;
+      font-weight: 500; font-size: clamp(16px, 1.5vw, 22px); letter-spacing: .02em; line-height: 1;
+    }
+    .logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <a class="logo" href="./" aria-label="Amaan Baig, home">AMAAN BAIG.</a>
+  </header>
+</body>
+</html>
