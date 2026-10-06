@@ -113,6 +113,16 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
   .orbit { width: min(100%, calc(300 * var(--u))); align-self: auto; height: auto; aspect-ratio: 1; }
 }
 .logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+/* ---------- Active column ----------
+   One column is active at a time (column 1 by default; hovering, tapping or tabbing into another makes it active).
+   The others are greyed out: brightness(0) turns every pixel black, invert(.125) lifts it to #202020. */
+.cols > section, .c3 .head { transition: filter .4s ease; }
+.c1:not(.on), .c2:not(.on), .c3:not(.on) .head { filter: brightness(0) invert(.125); }
+/* column 3: a black layer in "hue" blend mode over the star and carousel keeps their brightness but takes away all colour */
+.c3 { position: relative; }
+.c3::after { content: ""; position: absolute; inset: 0; background: #000; mix-blend-mode: hue; pointer-events: none; opacity: 0; transition: opacity .4s ease; }
+.c3:not(.on)::after { opacity: 1; }
+.c3:not(.on) .orbit * { animation-play-state: paused; } /* the star and carousel only move while their column is active */
   @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
 }
@@ -123,7 +133,7 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 
   <main class="cols">
     <!-- Column 1: I make complicated software feel obvious -->
-    <section class="c1" aria-label="Introduction">
+    <section class="c1 on" aria-label="Introduction">
       <h1 class="make">I MAKE</h1>
       <p class="vert">COMPLICATED<br>SOFTWARE</p>
       <p class="feel">FEEL</p>
@@ -266,6 +276,11 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
       }
 
       buildOrbit();
+
+      // Active column: the one last hovered, tapped or tabbed into stays active
+      var sections = document.querySelectorAll('.cols > section');
+      function activate() { sections.forEach(function (sec) { sec.classList.toggle('on', sec === this); }, this); }
+      sections.forEach(function (sec) { sec.addEventListener('pointerenter', activate); sec.addEventListener('focusin', activate); });
       var lastW = window.innerWidth, t;
       window.addEventListener('resize', function () {
         clearTimeout(t);
