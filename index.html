@@ -45,10 +45,14 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 /* columns 2 and 3: content sits on the bottom edge; headings share one top line */
 .c2, .c3 { display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
 .head { margin: 0 0 calc(30 * var(--u)); color: var(--accent); font: 400 calc(24 * var(--u))/1.25 var(--sans); }
-.clients { margin: 0; padding: 0 0 0 calc(36 * var(--u)); list-style: none; border-left: 1px solid var(--line);
-  display: flex; flex-direction: column; justify-content: space-between; height: calc(310 * var(--u)); }
+.clients { margin: 0; padding: 0 0 0 var(--g); list-style: none; border-left: 1px solid var(--line);
+  display: flex; flex-direction: column; justify-content: space-between; height: calc(340 * var(--u) - var(--g)); }
+/* one gap G for title-to-first-logo, between logos, and line-to-logos: the 340 of heading margin + list
+   holds the logos (133 tall at 1x, 157 at 1.18x) and six equal gaps, so G = (340 - 157) / 6 = 30.5 */
+.c2 { --g: calc(30.5 * var(--u)); }
+.c2 .head { margin-bottom: var(--g); }
 /* each logo at its width in the design (the SVGs aren't drawn at one shared scale) */
-.clients img { display: block; height: auto; width: calc(var(--w) * var(--u)); }
+.clients img { display: block; height: auto; width: calc(var(--w) * 1.18 * var(--u)); } /* 1.18x the design widths */
 /* ---------- Carousel around the glass spark ---------- */
 /* 8 curved cards repeat 4 images (1 2 3 4 1 2 3 4). Swap the files in assets/cards/ to change them. */
 .orbit {
