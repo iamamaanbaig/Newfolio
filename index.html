@@ -3,47 +3,121 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Amaan Baig</title>
+  <title>Amaan Baig — I make complicated software feel obvious</title>
+  <meta name="description" content="Amaan Baig makes complicated software feel obvious. Experience for judgment, AI for speed.">
   <meta name="theme-color" content="#040603">
 
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="preload" href="Hippo-Xjja.otf" as="font" type="font/otf" crossorigin>
+  <link rel="preload" href="ppmondwest-regular.otf" as="font" type="font/otf" crossorigin>
 
   <style>
-    :root {
-      --bg: #040603;
-      --accent: #AAFF66;
-      --sans: "Plus Jakarta Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
 
-      /* Page padding: 40px for now; final sizes to be decided */
-      --pad-y: 40px;   /* top and bottom */
-      --pad-x: 40px;   /* left and right */
-    }
-
-    *, *::before, *::after { box-sizing: border-box; }
-    html { -webkit-text-size-adjust: 100%; }
-    body {
-      margin: 0;
-      min-height: 100vh; min-height: 100svh;
-      padding: var(--pad-y) var(--pad-x);
-      background: var(--bg);
-      font-family: var(--sans);
-      -webkit-font-smoothing: antialiased;
-    }
-
-    /* Header: logo in the top-left corner */
-    .site-header { display: flex; justify-content: flex-start; }
-    .logo {
-      color: var(--accent); text-decoration: none;
-      font-weight: 500; font-size: clamp(16px, 1.5vw, 22px); letter-spacing: .02em; line-height: 1;
-    }
-    .logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
+@font-face { font-family: "Hippo"; src: url(Hippo-Xjja.otf) format("opentype"); font-display: swap; }
+@font-face { font-family: "PP Mondwest"; src: url(ppmondwest-regular.otf) format("opentype"); font-display: swap; }
+:root {
+  --bg: #040603; --accent: #AAFF66; --text: #F4F4F0; --line: #34362f;
+  --x: 40px;                 /* X: top/bottom padding, logo-to-content gap */
+  --y: 40px;                 /* Y: left/right padding */
+  --gap: calc(var(--x) * 2); /* between columns */
+  /* type unit: 1 design px at a 1440 x 1024 frame. It shrinks with the window's width,
+     or with the height left for the columns (1024 minus 150px of padding, logo and gaps = 874) */
+  --u: min(calc(100vw / 1440), calc((100vh - 150px) / 874));
+  --sans: "Plus Jakarta Sans", system-ui, sans-serif;
+}
+* { box-sizing: border-box; }
+body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); background: var(--bg); color: var(--text); font-family: var(--sans);
+  display: grid; grid-template-rows: auto 1fr; row-gap: var(--x); -webkit-font-smoothing: antialiased; overflow: hidden; }
+.logo { justify-self: start; color: var(--accent); font: 500 calc(23 * var(--u))/1.3 var(--sans); letter-spacing: .01em; text-decoration: none; }
+.cols { display: grid; grid-template-columns: 1fr 2fr 1fr; column-gap: var(--gap); min-height: 0; }
+/* column 1 */
+.c1 { display: flex; flex-direction: column; min-height: 0; }
+.make, .feel { margin: 0; font: 400 calc(57.5 * var(--u))/.8 "Hippo", var(--sans); letter-spacing: .01em; }
+.vert { margin: calc(22 * var(--u)) 0 0; align-self: flex-start; white-space: nowrap;
+  writing-mode: vertical-rl; transform: rotate(180deg);
+  font: 400 calc(86.5 * var(--u))/.76 "PP Mondwest", serif; }
+.feel { margin-top: calc(32 * var(--u)); }
+.obv { margin: calc(18 * var(--u)) 0 0; color: var(--accent); font: 400 calc(58 * var(--u))/1 var(--sans); letter-spacing: -.01em; }
+.note { margin-top: auto; display: flex; gap: calc(12 * var(--u)); align-items: flex-start; }
+.note svg { flex: none; width: calc(22 * var(--u)); margin-top: calc(2 * var(--u)); }
+.note p { margin: 0; font: 400 calc(21.5 * var(--u))/1.27 var(--sans); max-width: calc(240 * var(--u)); }
+/* columns 2 and 3: content sits on the bottom edge; headings share one top line */
+.c2, .c3 { display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
+.c2 { padding-left: 25%; }
+.head { margin: 0 0 calc(30 * var(--u)); color: var(--accent); font: 400 calc(24 * var(--u))/1.25 var(--sans); }
+.clients { margin: 0; padding: 0 0 0 calc(36 * var(--u)); list-style: none; border-left: 1px solid var(--line);
+  display: flex; flex-direction: column; justify-content: space-between; height: calc(310 * var(--u)); }
+/* each logo at its width in the design (the SVGs aren't drawn at one shared scale) */
+.clients img { display: block; height: auto; width: calc(var(--w) * var(--u)); }
+.star { display: block; width: 100%; height: calc(310 * var(--u)); } /* same height as the logo list, so both headings share one line */
+/* Phones and narrow windows: a simple stacked version until the phone layout is designed */
+@media (max-width: 900px) {
+  :root { --u: min(1px, calc(100vw / 420)); }
+  body { height: auto; overflow: visible; }
+  .cols { grid-template-columns: 1fr; row-gap: calc(var(--x) * 2); }
+  .note { margin-top: calc(28 * var(--u)); }
+  .c2 { padding-left: 0; }
+  .star { width: min(100%, calc(300 * var(--u))); }
+}
+.logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
   </style>
 </head>
 <body>
-  <header class="site-header">
-    <a class="logo" href="./" aria-label="Amaan Baig, home">AMAAN BAIG.</a>
-  </header>
+  <header><a class="logo" href="./" aria-label="Amaan Baig, home">AMAAN BAIG.</a></header>
+
+  <main class="cols">
+    <!-- Column 1: I make complicated software feel obvious -->
+    <section class="c1" aria-label="Introduction">
+      <h1 class="make">I MAKE</h1>
+      <p class="vert">COMPLICATED<br>SOFTWARE</p>
+      <p class="feel">FEEL</p>
+      <p class="obv">Obvious.</p>
+      <div class="note">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><g stroke="#AAFF66" stroke-width="3.6" stroke-linecap="round"><path d="M12 2.5v19"/><path d="M3.8 7.25l16.4 9.5"/><path d="M3.8 16.75l16.4-9.5"/></g></svg>
+        <p>Sometimes with a little visual creativity, when required.</p>
+      </div>
+    </section>
+
+    <!-- Column 2: experience, with the companies -->
+    <section class="c2" aria-label="Experience">
+      <h2 class="head">Experience for judgment.</h2>
+      <ul class="clients" aria-label="Companies I've worked with">
+        <li><img src="JJLandLaSalleLogo.svg" alt="JLL Technologies and LaSalle Investment Management" style="--w:259"></li>
+        <li><img src="NokiaLogo.svg" alt="Nokia" style="--w:85"></li>
+        <li><img src="GloballogicLogo.svg" alt="GlobalLogic" style="--w:114"></li>
+        <li><img src="MarlabsLogo.svg" alt="Marlabs" style="--w:95"></li>
+        <li><img src="ZitharaLogo.svg" alt="Zithara.ai" style="--w:96"></li>
+        <li><img src="ExceledgeLogo.svg" alt="Excel Edge" style="--w:79"></li>
+      </ul>
+    </section>
+
+    <!-- Column 3: AI -->
+    <section class="c3" aria-label="AI">
+      <h2 class="head">AI for speed.</h2>
+      <svg class="star" viewBox="0 0 100 100" aria-hidden="true">
+      <defs>
+        <radialGradient id="sBody" cx="42%" cy="40%" r="62%">
+          <stop offset="0" stop-color="#CFF7C9"/><stop offset=".35" stop-color="#9BE29A"/><stop offset=".75" stop-color="#5CC468"/><stop offset="1" stop-color="#3FA552"/>
+        </radialGradient>
+        <filter id="sSoft" x="-20%" y="-20%" width="140%" height="140%">
+          <!-- inner shade on the lower-right edges for a soft, clay-like volume -->
+          <feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="b"/>
+          <feOffset in="b" dx="-2.2" dy="-2.6" result="o"/>
+          <feComposite in="SourceAlpha" in2="o" operator="out" result="edge"/>
+          <feFlood flood-color="#1E7A33" flood-opacity=".55"/><feComposite in2="edge" operator="in" result="shade"/>
+          <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/></feMerge>
+        </filter>
+        <radialGradient id="sHi" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#F2FFEE" stop-opacity=".75"/><stop offset="1" stop-color="#F2FFEE" stop-opacity="0"/></radialGradient>
+      </defs>
+      <g transform="rotate(-20 50 50)">
+        <path filter="url(#sSoft)" fill="url(#sBody)" stroke="url(#sBody)" stroke-width="12" stroke-linejoin="round"
+          d="M50 9C57 34 66 43 91 50 66 57 57 66 50 91 43 66 34 57 9 50 34 43 43 34 50 9Z"/>
+        <ellipse cx="45" cy="44" rx="14" ry="10" fill="url(#sHi)"/>
+      </g>
+    </svg>
+    </section>
+  </main>
 </body>
 </html>
