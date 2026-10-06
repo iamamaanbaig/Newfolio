@@ -45,14 +45,67 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 /* columns 2 and 3: content sits on the bottom edge; headings share one top line */
 .c2, .c3 { display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
 .head { margin: 0 0 calc(30 * var(--u)); color: var(--accent); font: 400 calc(24 * var(--u))/1.25 var(--sans); }
-.clients { margin: 0; padding: 0 0 0 var(--g); list-style: none; border-left: 1px solid var(--line);
+.clients { position: relative; margin: 0; padding: 0 0 0 var(--g); list-style: none;
   display: flex; flex-direction: column; justify-content: space-between; height: calc(340 * var(--u) - var(--g)); }
+.clients ul { margin: 0; padding: 0; list-style: none; }
+.clients::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 1px; background: var(--line); transform-origin: 0 0; } /* the line */
 /* one gap G for title-to-first-logo, between logos, and line-to-logos: the 340 of heading margin + list
    holds the logos (133 tall at 1x, 157 at 1.18x) and six equal gaps, so G = (340 - 157) / 6 = 30.5 */
 .c2 { --g: calc(30.5 * var(--u)); }
 .c2 .head { margin-bottom: var(--g); }
 /* each logo at its width in the design (the SVGs aren't drawn at one shared scale) */
-.clients img { display: block; height: auto; width: calc(var(--w) * 1.18 * var(--u)); } /* 1.18x the design widths */
+.clients img { display: block; height: auto; width: calc(var(--w) * 1.18 * var(--u)); transform-origin: 0 0; } /* 1.18x the design widths */
+/* collapsed: case studies, the "Also" label, the end note and the hint are hidden; all six logos sit in one column */
+.cases, .also-label, .end, .hint { display: none; }
+.grp, .grp > ul { display: contents; }
+
+/* ---------- Column 2 open (it's the active column) ----------
+   Two views: A (first) shows JLL, Nokia and GlobalLogic open with the rest in an "Also" row;
+   B (when the pointer reaches "Also") folds JLL and Nokia into a row at the top and opens GlobalLogic onwards. */
+.c2 { position: relative; --dim: #3B3E3B; --cg: calc(48 * var(--u)); }   /* --cg: gap between companies */
+.c2.phase-b { --cg: calc(24 * var(--u)); }
+.c2.open { justify-content: flex-start; }
+.c2.open .head { margin-bottom: calc(36 * var(--u)); }
+.c2.open .clients { height: auto; justify-content: flex-start; padding-left: calc(16 * var(--u)); }
+.c2.open .clients img { width: calc(var(--w) * var(--u)); }
+.c2.open .co { margin-top: var(--cg); }
+.c2.open .top .co:first-child { margin-top: 0; }
+.c2.open .cases { display: block; margin-top: calc(20 * var(--u)); }
+.case + .case { margin-top: calc(16 * var(--u)); }
+/* a folded group: logos in one row, no case studies */
+.c2.open:not(.phase-b) .also, .c2.open.phase-b .top { display: flex; align-items: center; gap: calc(24 * var(--u)); }
+.c2.open:not(.phase-b) .also > ul, .c2.open.phase-b .top > ul { display: flex; align-items: center; gap: calc(24 * var(--u)); }
+.c2.open.phase-b .top > ul { gap: calc(32 * var(--u)); }
+.c2.open:not(.phase-b) .also .co, .c2.open.phase-b .top .co { margin: 0; }
+.c2.open:not(.phase-b) .also .cases, .c2.open.phase-b .top .cases { display: none; }
+.c2.open:not(.phase-b) .also { margin-top: calc(56 * var(--u)); }
+.c2.open:not(.phase-b) .also-label { display: block; color: var(--dim); font: 400 calc(24 * var(--u))/1.25 var(--sans); }
+.c2.open.phase-b .end { display: block; margin-top: calc(16 * var(--u)); color: #A0A3A0; font: 400 calc(16 * var(--u))/1.25 var(--sans); }
+.title { display: block; width: max-content; color: var(--dim); text-decoration: none; font: 400 calc(24 * var(--u))/1.25 var(--sans); transition: color .35s ease; }
+.case.on .title { color: #fff; }
+.title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
+/* the active case study's thumbnail opens below its title */
+.thumb { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .5s cubic-bezier(.16, 1, .3, 1), margin .5s cubic-bezier(.16, 1, .3, 1); }
+.thumb > span { min-height: 0; overflow: hidden; }
+.case.on .thumb { grid-template-rows: 1fr; margin-top: calc(16 * var(--u)); }
+.ph { display: block; width: calc(240 * var(--u)); height: calc(160 * var(--u)); background: #D9D9D9; } /* placeholder image */
+/* logos: the active case study's company keeps its colours; the others go grey */
+.c2.open .co:not(.on) img { filter: brightness(0) invert(.235); }
+/* green marker on the line beside the active title (placed by the script) */
+.clients::after { content: ""; position: absolute; left: 0; top: var(--mt, 0px); width: 2px; height: calc(28 * var(--u)); background: var(--accent); opacity: 0; transition: opacity .3s ease; }
+.c2.open .clients::after { opacity: 1; }
+/* "Scroll to see work", at the bottom, centred on the page (the column's centre is the page's centre) */
+.c2.open .hint { display: flex; flex-direction: column; align-items: center; gap: calc(12 * var(--u)); position: absolute; left: 50%; bottom: 0; translate: -50% 0;
+  margin: 0; color: var(--accent); font: 400 calc(16 * var(--u))/1.25 var(--sans); white-space: nowrap; }
+.hint svg { width: calc(24 * var(--u)); height: auto; }
+/* mouse parallax while open: layers drift at different rates (--py is -0.5 to 0.5, set by the script) */
+.c2.open .head { translate: 0 calc(var(--py, 0) * -6 * var(--u)); transition: translate .6s cubic-bezier(.16, 1, .3, 1); }
+.c2.open .clients img, .c2.open .also-label { translate: 0 calc(var(--py, 0) * -12 * var(--u)); transition: translate .8s cubic-bezier(.22, 1, .36, 1), filter .35s ease; }
+.c2.open .title { translate: 0 calc(var(--py, 0) * -18 * var(--u)); transition: translate 1s cubic-bezier(.22, 1, .36, 1), color .35s ease; }
+.c2.open .thumb { translate: 0 calc(var(--py, 0) * -28 * var(--u)); transition: translate 1.2s cubic-bezier(.22, 1, .36, 1), grid-template-rows .5s cubic-bezier(.16, 1, .3, 1), margin .5s cubic-bezier(.16, 1, .3, 1); }
+/* column 3 steps aside while column 2 is open */
+.cols > .c3 { transition: filter .4s ease, opacity .4s ease; }
+.c2.open ~ .c3 { opacity: 0; }
 /* ---------- Carousel around the glass spark ---------- */
 /* 8 curved cards repeat 4 images (1 2 3 4 1 2 3 4). Swap the files in assets/cards/ to change them. */
 .orbit {
@@ -106,6 +159,7 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 
 /* Phones and narrow windows: a simple stacked version until the phone layout is designed */
 @media (max-width: 900px) {
+  .c2.open .hint { display: none; }
   :root { --u: min(1px, calc(100vw / 420)); }
   body { height: auto; overflow: visible; }
   .cols { grid-template-columns: 1fr; row-gap: calc(var(--x) * 2); }
@@ -143,14 +197,41 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
     <!-- Column 2: experience, with the companies -->
     <section class="c2" aria-label="Experience">
       <h2 class="head">Experience for judgment.</h2>
+      <!-- Collapsed: six logos in a column. Open (column active): companies with their case studies; the groups fold into a row of logos -->
       <ul class="clients" aria-label="Companies I've worked with">
-        <li><img src="JJLandLaSalleLogo.svg" alt="JLL Technologies and LaSalle Investment Management" style="--w:259"></li>
-        <li><img src="NokiaLogo.svg" alt="Nokia" style="--w:85"></li>
-        <li><img src="GloballogicLogo.svg" alt="GlobalLogic" style="--w:114"></li>
-        <li><img src="MarlabsLogo.svg" alt="Marlabs" style="--w:95"></li>
-        <li><img src="ZitharaLogo.svg" alt="Zithara.ai" style="--w:96"></li>
-        <li><img src="ExceledgeLogo.svg" alt="Excel Edge" style="--w:79"></li>
+        <li class="grp top"><ul>
+        <li class="co"><img src="JJLandLaSalleLogo.svg" alt="JLL Technologies and LaSalle Investment Management" style="--w:259">
+          <ul class="cases">
+            <li class="case on"><a class="title" href="#">A case study title comes here</a><span class="thumb"><span><span class="ph"></span></span></span></li>
+          </ul></li>
+        <li class="co"><img src="NokiaLogo.svg" alt="Nokia" style="--w:85">
+          <ul class="cases">
+            <li class="case"><a class="title" href="#">A case study title comes here</a><span class="thumb"><span><span class="ph"></span></span></span></li>
+          </ul></li>
+        </ul></li>
+        <li class="co"><img src="GloballogicLogo.svg" alt="GlobalLogic" style="--w:114">
+          <ul class="cases">
+            <li class="case"><a class="title" href="#">A case study title comes here</a><span class="thumb"><span><span class="ph"></span></span></span></li>
+            <li class="case"><a class="title" href="#">A case study title comes here</a><span class="thumb"><span><span class="ph"></span></span></span></li>
+          </ul></li>
+        <li class="grp also"><span class="also-label">Also</span><ul>
+        <li class="co"><img src="MarlabsLogo.svg" alt="Marlabs" style="--w:95">
+          <ul class="cases">
+            <li class="case"><a class="title" href="#">A case study title comes here</a><span class="thumb"><span><span class="ph"></span></span></span></li>
+          </ul></li>
+        <li class="co"><img src="ZitharaLogo.svg" alt="Zithara.ai" style="--w:96">
+          <ul class="cases">
+            <li class="case"><a class="title" href="#">A case study title comes here</a><span class="thumb"><span><span class="ph"></span></span></span></li>
+            <li class="case"><a class="title" href="#">A case study title comes here</a><span class="thumb"><span><span class="ph"></span></span></span></li>
+          </ul></li>
+        <li class="co"><img src="ExceledgeLogo.svg" alt="Excel Edge" style="--w:79">
+          <ul class="cases">
+            <li class="case"><a class="title" href="#">A case study title comes here</a><span class="thumb"><span><span class="ph"></span></span></span></li>
+          </ul></li>
+        </ul></li>
+        <li class="end">End of the list</li>
       </ul>
+      <p class="hint" aria-hidden="true"><svg viewBox="0 0 24 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x=".75" y=".75" width="22.5" height="34.5" rx="11.25"/><path d="M12 7v6" stroke-linecap="round"/></svg>Scroll to see work</p>
     </section>
 
     <!-- Column 3: AI -->
@@ -273,9 +354,126 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 
       buildOrbit();
 
+      // ---------- Column 2: opens into its case studies while it is the active column ----------
+      var c2 = document.querySelector('.c2'), list = c2.querySelector('.clients');
+      var head = c2.querySelector('.head'), logos = [].slice.call(c2.querySelectorAll('.clients img'));
+      var cases = [].slice.call(c2.querySelectorAll('.case')), titles = [].slice.call(c2.querySelectorAll('.title'));
+      var label = c2.querySelector('.also-label'), endNote = c2.querySelector('.end'), hint = c2.querySelector('.hint');
+      var EASE = 'cubic-bezier(.22, 1, .36, 1)';
+      var still = matchMedia('(prefers-reduced-motion: reduce)');
+      var closing, settled = 0, busy = 0;   // settled: until then the marker sticks to its title; busy: until then the pointer doesn't pick
+      function rects(els) { return els.map(function (el) { return el.getBoundingClientRect(); }); }
+      function stop(els) { els.forEach(function (el) { el.getAnimations().forEach(function (a) { a.cancel(); }); }); }
+      function shown(r) { return r.width > 0 || r.height > 0; }
+      function depth(el) { return el === head ? 0 : el.tagName === 'IMG' || el === label ? 1 : el.classList.contains('ph') ? 3 : 2; }
+
+      // Change the layout and animate it (FLIP): every element glides from where it was to where it is now,
+      // each layer at its own speed (heading, logos, titles, images), which gives the parallax.
+      // Elements that appear rise in from below; elements that disappear leave a fading copy behind.
+      function relayout(change) {
+        var els = [head].concat(logos, titles, [].slice.call(c2.querySelectorAll('.ph')), [label, endNote, hint]);
+        var before = rects(els), lineBefore = list.getBoundingClientRect();
+        stop(els); list.getAnimations({ subtree: true }).forEach(function (a) { a.cancel(); });
+        var ghosts = [];
+        change();
+        var after = rects(els), lineAfter = list.getBoundingClientRect();
+        settled = performance.now() + 1600; busy = performance.now() + 900;
+        if (still.matches) return;
+        var n = 0;
+        els.forEach(function (el, i) {
+          var a = before[i], b = after[i], d = depth(el);
+          if (shown(a) && shown(b)) {
+            if (Math.abs(a.top - b.top) < .5 && Math.abs(a.left - b.left) < .5 && Math.abs(a.width - b.width) < .5) return;
+            el.animate([{ transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ')' }, { transform: 'none' }],
+              { duration: 850 + d * 200 + n * 30, delay: d * 50 + n++ * 25, easing: EASE, fill: 'backwards' });
+          } else if (shown(b)) {
+            el.animate([{ opacity: 0, transform: 'translateY(' + (50 + d * 40) + 'px)' }, { opacity: 1, transform: 'none' }],
+              { duration: 950 + d * 200, delay: 150 + d * 70 + n++ * 30, easing: EASE, fill: 'backwards' });
+          } else if (shown(a)) ghost(el, a);
+        });
+        list.animate([{ transform: 'translateY(' + (lineBefore.top - lineAfter.top) + 'px) scaleY(' + (lineBefore.height / lineAfter.height) + ')' }, { transform: 'none' }],
+          { duration: 1000, easing: EASE, pseudoElement: '::before' });
+      }
+      // a copy of a disappearing element that fades upward where it was
+      function ghost(el, r) {
+        var cs = getComputedStyle(el), g = el.cloneNode(true);
+        g.removeAttribute('href'); g.setAttribute('aria-hidden', 'true');
+        Object.assign(g.style, { position: 'fixed', left: r.left + 'px', top: r.top + 'px', width: r.width + 'px', height: r.height + 'px', margin: 0,
+          color: cs.color, font: cs.font, filter: cs.filter, background: cs.backgroundColor, translate: 'none', pointerEvents: 'none', zIndex: 5 });
+        document.body.appendChild(g);
+        g.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(-24px)' }], { duration: 350, easing: 'ease-out', fill: 'forwards' }).onfinish = function () { g.remove(); };
+      }
+
+      // the active case study: its title is white, its image open, its company logo in colour
+      function pick(li) {
+        cases.forEach(function (c) { c.classList.toggle('on', c === li); });
+        c2.querySelectorAll('.co').forEach(function (co) { co.classList.toggle('on', co.contains(li)); });
+      }
+      pick(cases[0]);
+      // view B (pointer reached "Also") or back to view A (pointer reached the folded row at the top); co: the company pointed at
+      function setPhase(b, co) {
+        var first = (co || c2.querySelector(b ? '.also .co' : '.top .co')).querySelector('.case');
+        relayout(function () { c2.classList.toggle('phase-b', b); pick(first); });
+      }
+
+      function setOpen(open) {
+        clearTimeout(closing);
+        if (open === c2.classList.contains('open')) return;
+        if (open || still.matches) { relayout(function () { c2.classList.toggle('open', open); if (!open) { c2.classList.remove('phase-b'); pick(cases[0]); } }); return; }
+        // closing: the open-only elements sink and fade first, then the logos glide back
+        var extra = titles.concat([].slice.call(c2.querySelectorAll('.ph')), [label, endNote, hint]);
+        extra.forEach(function (el) { el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(16px)' }], { duration: 180, easing: 'ease-in', fill: 'forwards' }); });
+        closing = setTimeout(function () {
+          stop(extra);
+          relayout(function () { c2.classList.remove('open', 'phase-b'); pick(cases[0]); });
+        }, 170);
+      }
+
+      // hover intent: pick what the pointer rests on (not what it sweeps across), and wait while things are moving
+      var intent, px = 0, py = 0;
+      function resolve() {
+        if (!c2.classList.contains('open')) return;
+        var wait = busy - performance.now();
+        if (wait > 0) { intent = setTimeout(resolve, wait); return; }
+        var el = document.elementFromPoint(px, py);
+        if (!el || !list.contains(el)) return;
+        var cs = el.closest('.case'), b = c2.classList.contains('phase-b');
+        if (cs) pick(cs);
+        else if (!b && el.closest('.also')) setPhase(true, el.closest('.co'));
+        else if (b && el.closest('.top')) setPhase(false, el.closest('.co'));
+      }
+      list.addEventListener('pointermove', function (e) { px = e.clientX; py = e.clientY; clearTimeout(intent); intent = setTimeout(resolve, 140); });
+      list.addEventListener('pointerleave', function () { clearTimeout(intent); });
+      cases.forEach(function (li) { li.addEventListener('focusin', function () {
+        var b = !!li.closest('.also'), a = !!li.closest('.top');
+        if (b && !c2.classList.contains('phase-b')) setPhase(true, li.closest('.co'));
+        else if (a && c2.classList.contains('phase-b')) setPhase(false, li.closest('.co'));
+        pick(li);
+      }); });
+
+      // the green marker follows the active title (eased, so it slides between titles and rides along as images open and close)
+      var mt = null;
+      (function follow() {
+        if (c2.classList.contains('open')) {
+          var t = c2.querySelector('.case.on .title').getBoundingClientRect(), l = list.getBoundingClientRect();
+          var target = t.top - l.top + (t.height - parseFloat(getComputedStyle(list, '::after').height)) / 2;
+          mt = mt === null || performance.now() < settled ? target : mt + (target - mt) * .2;
+          list.style.setProperty('--mt', mt.toFixed(1) + 'px');
+        } else mt = null;
+        requestAnimationFrame(follow);
+      })();
+      // mouse parallax while open
+      c2.addEventListener('pointermove', function (e) {
+        var r = c2.getBoundingClientRect();
+        c2.style.setProperty('--py', ((e.clientY - r.top) / r.height - .5).toFixed(3));
+      });
+
       // Active column: the one last hovered, tapped or tabbed into stays active
       var sections = document.querySelectorAll('.cols > section');
-      function activate() { sections.forEach(function (sec) { sec.classList.toggle('on', sec === this); }, this); }
+      function activate() {
+        sections.forEach(function (sec) { sec.classList.toggle('on', sec === this); }, this);
+        setOpen(this === c2);
+      }
       sections.forEach(function (sec) { sec.addEventListener('pointerenter', activate); sec.addEventListener('focusin', activate); });
       var lastW = window.innerWidth, t;
       window.addEventListener('resize', function () {
