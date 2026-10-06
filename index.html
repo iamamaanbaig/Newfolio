@@ -29,7 +29,7 @@
 * { box-sizing: border-box; }
 body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); background: var(--bg); color: var(--text); font-family: var(--sans);
   display: grid; grid-template-rows: auto 1fr; row-gap: var(--x); -webkit-font-smoothing: antialiased; overflow: hidden; }
-.logo { justify-self: start; color: var(--accent); font: 500 calc(23 * var(--u))/1.3 var(--sans); letter-spacing: .01em; text-decoration: none; }
+.logo { justify-self: start; color: var(--accent); font: 500 calc(26 * var(--u))/1.3 var(--sans); letter-spacing: .01em; text-decoration: none; }
 .cols { display: grid; grid-template-columns: repeat(3, 25%); justify-content: space-between; min-height: 0; } /* three equal columns, each 1/4 of the width; the two gaps share the rest equally */
 /* column 1 */
 .c1 { display: flex; flex-direction: column; min-height: 0; }
@@ -46,7 +46,7 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 .c2, .c3 { display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
 .head { margin: 0 0 calc(30 * var(--u)); color: var(--accent); font: 400 calc(24 * var(--u))/1.25 var(--sans); }
 .clients { margin: 0; padding: 0 0 0 calc(36 * var(--u)); list-style: none; border-left: 1px solid var(--line);
-  display: flex; flex-direction: column; justify-content: space-between; height: calc(310 * var(--u)); }
+  display: flex; flex-direction: column; justify-content: space-between; height: var(--box, calc(310 * var(--u))); }
 /* each logo at its width in the design (the SVGs aren't drawn at one shared scale) */
 .clients img { display: block; height: auto; width: calc(var(--w) * var(--u)); }
 /* ---------- Carousel around the glass spark ---------- */
@@ -56,12 +56,12 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
   --img-3: url('assets/cards/notebooklm.jpg'); --img-4: url('assets/cards/figma.jpg');
   --fill-1: #D77655; --fill-2: #74AA9C; --fill-3: #000; --fill-4: #fff; /* shown while the images load */
   position: relative;
-  width: 100%; height: calc(310 * var(--u)); /* same height as the logo list, so both headings share one line */
+  width: 100%; height: var(--box, calc(310 * var(--u))); /* same height as the logo list, so both headings share one line */
   display: grid; place-items: center;
   perspective: 1400px; transform-style: preserve-3d;
   pointer-events: none;
 }
-.orbit > * { grid-area: 1 / 1; translate: 0 var(--drop, 0px); } /* --drop (set by the script) puts the ring's lowest point on the bottom line */
+.orbit > * { grid-area: 1 / 1; translate: var(--shift, 0px) var(--drop, 0px); } /* set by the script: --shift centres the carousel in the column, --drop puts its lowest point on the bottom line */
 /* .tilt holds the ring's angle and a gentle float; .ring spins at a constant speed */
 .tilt, .ring { display: block; position: relative; width: var(--card, 60px); height: var(--card, 60px); transform-style: preserve-3d; }
 .tilt { transform: rotateZ(-35deg) rotateX(-28deg); animation: sway 3.5s ease-in-out infinite alternate; }
@@ -90,7 +90,7 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 .slice i + i { transform: rotateY(180deg); --bx: var(--bx-back); --depth: .6; filter: blur(2px); }
 
 .spark {
-  width: 64%; height: auto; overflow: visible;   /* bigger star */
+  width: var(--star, 100%); max-width: none; height: auto; overflow: visible;   /* --star is set by the script so star + cards fill the column */
   filter: drop-shadow(0 calc(6 * var(--u)) calc(16 * var(--u)) rgba(120, 230, 70, .4));
   animation: float 5s ease-in-out infinite;
 }
@@ -210,9 +210,10 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
       var ring = document.getElementById('ring');
       var CARDS = 8, SLICES = 8, GAP = 360 / CARDS;
       var CORNER = 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" preserveAspectRatio="none"><rect width="40" height="40" rx="10"/></svg>') + '")';
-      function buildOrbit() {
-        var size = orbit.getBoundingClientRect().width;
-        var r = size / 2.7;                // ring radius: ring + one card fill the box
+      var cols = document.querySelector('.cols'), spark = orbit.querySelector('.spark'), tilt = orbit.querySelector('.tilt');
+      function buildCards(star) {
+        orbit.style.setProperty('--star', star.toFixed(2) + 'px');
+        var r = star / 1.728;              // ring radius, kept in proportion to the star
         var card = r * 0.42;               // card width and height along the curve (smaller cards)
         orbit.style.setProperty('--card', card.toFixed(2) + 'px');
         var arc = card / r;                // card angle in radians
@@ -233,40 +234,58 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
           html += '</span>';
         }
         ring.innerHTML = html;
-        alignBottom();
       }
 
-      // Lower the carousel so its lowest point, over a full turn, sits on the bottom line.
-      // Measured twice: moving the ring down changes its perspective slightly, so the second pass corrects that.
-      function alignBottom() {
-        var tilt = orbit.querySelector('.tilt'), spark = orbit.querySelector('.spark');
-        var faces = ring.querySelectorAll('.slice i:first-child');
-        [ring, tilt, spark].forEach(function (el) { el.style.animation = 'none'; });
-        tilt.style.transform = 'rotateZ(-35deg) rotateX(-28deg)';
-        function lowestPoint() {
-          var lowest = spark.getBoundingClientRect().bottom;
-          for (var a = 0; a < 360; a += 5) {
-            ring.style.transform = 'rotateY(' + (22.5 - a) + 'deg)';
-            for (var f = 0; f < faces.length; f++) lowest = Math.max(lowest, faces[f].getBoundingClientRect().bottom);
+      // Painted extent of star + cards over a full turn (cards are measured at 5° steps, held still)
+      function extent() {
+        var faces = ring.querySelectorAll('.slice i:first-child'), b = spark.getBoundingClientRect();
+        var e = { l: b.left, r: b.right, t: b.top, b: b.bottom };
+        for (var a = 0; a < 360; a += 5) {
+          ring.style.transform = 'rotateY(' + (22.5 - a) + 'deg)';
+          for (var f = 0; f < faces.length; f++) {
+            b = faces[f].getBoundingClientRect();
+            e.l = Math.min(e.l, b.left); e.r = Math.max(e.r, b.right); e.t = Math.min(e.t, b.top); e.b = Math.max(e.b, b.bottom);
           }
-          return lowest;
         }
-        var drop = 0;
-        for (var pass = 0; pass < 2; pass++) {
+        return e;
+      }
+      function hold(still) {
+        [ring, tilt, spark].forEach(function (el) { el.style.animation = still ? 'none' : ''; el.style.transform = ''; });
+        if (still) tilt.style.transform = 'rotateZ(-35deg) rotateX(-28deg)';
+      }
+
+      // Size the carousel so star + cards span exactly the column's width, centre it,
+      // make the box tall enough that it stays below the heading, and put its lowest point on the bottom line.
+      // Each step is measured twice: perspective makes the size and position slightly non-linear.
+      function buildOrbit() {
+        var col = orbit.parentElement.getBoundingClientRect(), star = col.width * 0.7, e, pass;
+        hold(true);
+        orbit.style.setProperty('--shift', '0px'); orbit.style.setProperty('--drop', '0px');
+        for (pass = 0; pass < 3; pass++) {
+          buildCards(star); hold(true);
+          e = extent(); star *= col.width / (e.r - e.l);
+        }
+        buildCards(star); hold(true);
+        var shift = 0, drop = 0;
+        for (pass = 0; pass < 2; pass++) {
+          e = extent();
+          shift += (col.left + col.right) / 2 - (e.l + e.r) / 2;
+          orbit.style.setProperty('--shift', shift.toFixed(1) + 'px');
+        }
+        // the box (shared with the logo list, so both headings stay on one line) is at least as tall as the carousel
+        cols.style.removeProperty('--box');
+        cols.style.setProperty('--box', Math.max(orbit.getBoundingClientRect().height, e.b - e.t).toFixed(1) + 'px');
+        for (pass = 0; pass < 2; pass++) {
+          e = extent();
+          drop += orbit.getBoundingClientRect().bottom - e.b;
           orbit.style.setProperty('--drop', drop.toFixed(1) + 'px');
-          drop = Math.max(0, drop + orbit.getBoundingClientRect().bottom - lowestPoint());
         }
-        orbit.style.setProperty('--drop', drop.toFixed(1) + 'px');
-        [ring, tilt, spark].forEach(function (el) { el.style.animation = ''; el.style.transform = ''; });
+        hold(false);
       }
 
       buildOrbit();
-      var lastW = window.innerWidth, t;
-      window.addEventListener('resize', function () {
-        clearTimeout(t);
-        if (window.innerWidth !== lastW) { lastW = window.innerWidth; t = setTimeout(buildOrbit, 120); }   // new width: rebuild the cards
-        else t = setTimeout(alignBottom, 120);                                                            // new height only: re-align
-      });
+      var t;
+      window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(buildOrbit, 120); });
     })();
   </script>
 </body>
