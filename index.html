@@ -116,12 +116,8 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 /* ---------- Active column ----------
    One column is active at a time (column 1 by default; hovering, tapping or tabbing into another makes it active).
    The others are greyed out: brightness(0) turns every pixel black, invert(.125) lifts it to #202020. */
-.cols > section, .c3 .head { transition: filter .4s ease; }
-.c1:not(.on), .c2:not(.on), .c3:not(.on) .head { filter: brightness(0) invert(.125); }
-/* column 3: a black layer in "hue" blend mode over the star and carousel keeps their brightness but takes away all colour */
-.c3 { position: relative; }
-.c3::after { content: ""; position: absolute; inset: 0; background: #000; mix-blend-mode: hue; pointer-events: none; opacity: 0; transition: opacity .4s ease; }
-.c3:not(.on)::after { opacity: 1; }
+.cols > section { transition: filter .4s ease; }
+.cols > section:not(.on) { filter: brightness(0) invert(.125); }
 .c3:not(.on) .orbit * { animation-play-state: paused; } /* the star and carousel only move while their column is active */
   @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
