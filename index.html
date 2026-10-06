@@ -63,7 +63,7 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
   perspective: 1400px; transform-style: preserve-3d;
   pointer-events: none;
 }
-.orbit > * { grid-area: 1 / 1; }
+.orbit > * { grid-area: 1 / 1; translate: 0 var(--drop, 0px); } /* --drop (set by the script) puts the ring's lowest point on the bottom line */
 /* .tilt holds the ring's angle and a gentle float; .ring spins at a constant speed */
 .tilt, .ring { display: block; position: relative; width: var(--card, 60px); height: var(--card, 60px); transform-style: preserve-3d; }
 .tilt { transform: rotateZ(-35deg) rotateX(-28deg); animation: sway 3.5s ease-in-out infinite alternate; }
@@ -236,13 +236,39 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
           html += '</span>';
         }
         ring.innerHTML = html;
+        alignBottom();
       }
+
+      // Lower the carousel so its lowest point, over a full turn, sits on the bottom line.
+      // Measured twice: moving the ring down changes its perspective slightly, so the second pass corrects that.
+      function alignBottom() {
+        var tilt = orbit.querySelector('.tilt'), spark = orbit.querySelector('.spark');
+        var faces = ring.querySelectorAll('.slice i:first-child');
+        [ring, tilt, spark].forEach(function (el) { el.style.animation = 'none'; });
+        tilt.style.transform = 'rotateZ(-35deg) rotateX(-28deg)';
+        function lowestPoint() {
+          var lowest = spark.getBoundingClientRect().bottom;
+          for (var a = 0; a < 360; a += 5) {
+            ring.style.transform = 'rotateY(' + (22.5 - a) + 'deg)';
+            for (var f = 0; f < faces.length; f++) lowest = Math.max(lowest, faces[f].getBoundingClientRect().bottom);
+          }
+          return lowest;
+        }
+        var drop = 0;
+        for (var pass = 0; pass < 2; pass++) {
+          orbit.style.setProperty('--drop', drop.toFixed(1) + 'px');
+          drop = Math.max(0, drop + orbit.getBoundingClientRect().bottom - lowestPoint());
+        }
+        orbit.style.setProperty('--drop', drop.toFixed(1) + 'px');
+        [ring, tilt, spark].forEach(function (el) { el.style.animation = ''; el.style.transform = ''; });
+      }
+
       buildOrbit();
       var lastW = window.innerWidth, t;
       window.addEventListener('resize', function () {
-        if (window.innerWidth === lastW) return;   // ignore mobile address-bar height changes
-        lastW = window.innerWidth;
-        clearTimeout(t); t = setTimeout(buildOrbit, 120);
+        clearTimeout(t);
+        if (window.innerWidth !== lastW) { lastW = window.innerWidth; t = setTimeout(buildOrbit, 120); }   // new width: rebuild the cards
+        else t = setTimeout(alignBottom, 120);                                                            // new height only: re-align
       });
     })();
   </script>
