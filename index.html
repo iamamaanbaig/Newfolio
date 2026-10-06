@@ -21,7 +21,6 @@
   --bg: #040603; --accent: #AAFF66; --text: #F4F4F0; --line: #34362f;
   --x: 40px;                 /* X: top/bottom padding, logo-to-content gap */
   --y: 40px;                 /* Y: left/right padding */
-  --gap: calc(var(--x) * 2); /* between columns */
   /* type unit: 1 design px at a 1440 x 1024 frame. It shrinks with the window's width,
      or with the height left for the columns (1024 minus 150px of padding, logo and gaps = 874) */
   --u: min(calc(100vw / 1440), calc((100vh - 150px) / 874));
@@ -30,8 +29,8 @@
 * { box-sizing: border-box; }
 body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); background: var(--bg); color: var(--text); font-family: var(--sans);
   display: grid; grid-template-rows: auto 1fr; row-gap: var(--x); -webkit-font-smoothing: antialiased; overflow: hidden; }
-.logo { justify-self: start; color: var(--accent); font: 500 calc(23 * var(--u))/1.3 var(--sans); letter-spacing: .01em; text-decoration: none; }
-.cols { display: grid; grid-template-columns: 1fr 2fr 1fr; column-gap: var(--gap); min-height: 0; }
+.logo { justify-self: start; color: var(--accent); font: 500 calc(26 * var(--u))/1.3 var(--sans); letter-spacing: .01em; text-decoration: none; }
+.cols { display: grid; grid-template-columns: repeat(3, 25%); justify-content: space-between; min-height: 0; } /* three equal columns, each 1/4 of the width; the two gaps share the rest equally */
 /* column 1 */
 .c1 { display: flex; flex-direction: column; min-height: 0; }
 .make, .feel { margin: 0; font: 400 calc(57.5 * var(--u))/.8 "Hippo", var(--sans); letter-spacing: .01em; }
@@ -45,24 +44,74 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 .note p { margin: 0; font: 400 calc(21.5 * var(--u))/1.27 var(--sans); max-width: calc(240 * var(--u)); }
 /* columns 2 and 3: content sits on the bottom edge; headings share one top line */
 .c2, .c3 { display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
-.c2 { padding-left: 25%; }
 .head { margin: 0 0 calc(30 * var(--u)); color: var(--accent); font: 400 calc(24 * var(--u))/1.25 var(--sans); }
 .clients { margin: 0; padding: 0 0 0 calc(36 * var(--u)); list-style: none; border-left: 1px solid var(--line);
-  display: flex; flex-direction: column; justify-content: space-between; height: calc(310 * var(--u)); }
+  display: flex; flex-direction: column; justify-content: space-between; height: var(--box, calc(310 * var(--u))); }
 /* each logo at its width in the design (the SVGs aren't drawn at one shared scale) */
 .clients img { display: block; height: auto; width: calc(var(--w) * var(--u)); }
-.star { display: block; width: 100%; height: calc(310 * var(--u)); } /* same height as the logo list, so both headings share one line */
+/* ---------- Carousel around the glass spark ---------- */
+/* 8 curved cards repeat 4 images (1 2 3 4 1 2 3 4). Swap the files in assets/cards/ to change them. */
+.orbit {
+  --img-1: url('assets/cards/claude.jpg'); --img-2: url('assets/cards/chatgpt.jpg');
+  --img-3: url('assets/cards/notebooklm.jpg'); --img-4: url('assets/cards/figma.jpg');
+  --fill-1: #D77655; --fill-2: #74AA9C; --fill-3: #000; --fill-4: #fff; /* shown while the images load */
+  position: relative;
+  width: 100%; height: var(--box, calc(310 * var(--u))); /* same height as the logo list, so both headings share one line */
+  display: grid; place-items: center;
+  perspective: 1400px; transform-style: preserve-3d;
+  pointer-events: none;
+}
+.orbit > * { grid-area: 1 / 1; translate: var(--shift, 0px) var(--drop, 0px); } /* set by the script: --shift centres the carousel in the column, --drop puts its lowest point on the bottom line */
+/* .tilt holds the ring's angle and a gentle float; .ring spins at a constant speed */
+.tilt, .ring { display: block; position: relative; width: var(--card, 60px); height: var(--card, 60px); transform-style: preserve-3d; }
+.tilt { transform: rotateZ(-35deg) rotateX(-28deg); animation: sway 3.5s ease-in-out infinite alternate; }
+.ring { transform: rotateY(22.5deg); animation: spin 24s linear infinite; }
+@keyframes sway {
+  from { transform: translateY(1.5%) rotateZ(-36deg) rotateX(-28deg); }
+  to   { transform: translateY(-1.5%) rotateZ(-34deg) rotateX(-28deg); }
+}
+@keyframes spin { from { transform: rotateY(22.5deg); } to { transform: rotateY(-337.5deg); } }
+.tile, .slice { position: absolute; transform-style: preserve-3d; }
+.tile { inset: 0; }
+/* Each card is built from thin vertical slices so it bends with the ring */
+.slice { top: 0; left: 50%; height: 100%; }
+.slice i {
+  position: absolute; inset: 0;
+  background:
+    linear-gradient(rgba(0, 0, 0, var(--depth, 0)), rgba(0, 0, 0, var(--depth, 0))),
+    linear-gradient(rgba(0, 0, 0, var(--shade, 0)), rgba(0, 0, 0, var(--shade, 0))),
+    var(--img) var(--bx) 0 / var(--card) 100% no-repeat,
+    var(--fill);
+  -webkit-mask: var(--corner) var(--bx) 0 / var(--card) 100% no-repeat;
+          mask: var(--corner) var(--bx) 0 / var(--card) 100% no-repeat;
+  backface-visibility: hidden; -webkit-backface-visibility: hidden;
+}
+/* Inner side of a card: only ever seen on the far side of the ring, so it is always dimmed and blurred */
+.slice i + i { transform: rotateY(180deg); --bx: var(--bx-back); --depth: .6; filter: blur(2px); }
+
+.spark {
+  width: var(--star, 100%); max-width: none; height: auto; overflow: visible;   /* --star is set by the script so star + cards fill the column */
+  filter: drop-shadow(0 calc(6 * var(--u)) calc(16 * var(--u)) rgba(120, 230, 70, .4));
+  animation: float 5s ease-in-out infinite;
+}
+@keyframes float {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50%      { transform: translateY(-3%) rotate(8deg); }
+}
+
 /* Phones and narrow windows: a simple stacked version until the phone layout is designed */
 @media (max-width: 900px) {
   :root { --u: min(1px, calc(100vw / 420)); }
   body { height: auto; overflow: visible; }
   .cols { grid-template-columns: 1fr; row-gap: calc(var(--x) * 2); }
   .note { margin-top: calc(28 * var(--u)); }
-  .c2 { padding-left: 0; }
-  .star { width: min(100%, calc(300 * var(--u))); }
+  .orbit { width: min(100%, calc(300 * var(--u))); height: auto; aspect-ratio: 1; }
 }
 .logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
-  </style>
+  @media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation: none !important; }
+}
+</style>
 </head>
 <body>
   <header><a class="logo" href="./" aria-label="Amaan Baig, home">AMAAN BAIG.</a></header>
@@ -96,28 +145,148 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
     <!-- Column 3: AI -->
     <section class="c3" aria-label="AI">
       <h2 class="head">AI for speed.</h2>
-      <svg class="star" viewBox="0 0 100 100" aria-hidden="true">
-      <defs>
-        <radialGradient id="sBody" cx="42%" cy="40%" r="62%">
-          <stop offset="0" stop-color="#CFF7C9"/><stop offset=".35" stop-color="#9BE29A"/><stop offset=".75" stop-color="#5CC468"/><stop offset="1" stop-color="#3FA552"/>
-        </radialGradient>
-        <filter id="sSoft" x="-20%" y="-20%" width="140%" height="140%">
-          <!-- inner shade on the lower-right edges for a soft, clay-like volume -->
-          <feGaussianBlur in="SourceAlpha" stdDeviation="3.2" result="b"/>
-          <feOffset in="b" dx="-2.2" dy="-2.6" result="o"/>
-          <feComposite in="SourceAlpha" in2="o" operator="out" result="edge"/>
-          <feFlood flood-color="#1E7A33" flood-opacity=".55"/><feComposite in2="edge" operator="in" result="shade"/>
-          <feMerge><feMergeNode in="SourceGraphic"/><feMergeNode in="shade"/></feMerge>
-        </filter>
-        <radialGradient id="sHi" cx="50%" cy="50%" r="50%"><stop offset="0" stop-color="#F2FFEE" stop-opacity=".75"/><stop offset="1" stop-color="#F2FFEE" stop-opacity="0"/></radialGradient>
-      </defs>
-      <g transform="rotate(-20 50 50)">
-        <path filter="url(#sSoft)" fill="url(#sBody)" stroke="url(#sBody)" stroke-width="12" stroke-linejoin="round"
-          d="M50 9C57 34 66 43 91 50 66 57 57 66 50 91 43 66 34 57 9 50 34 43 43 34 50 9Z"/>
-        <ellipse cx="45" cy="44" rx="14" ry="10" fill="url(#sHi)"/>
-      </g>
-    </svg>
+      <!-- Glass spark with 8 curved cards repeating 4 logos (Claude, ChatGPT, NotebookLM, Figma); images in assets/cards/ -->
+      <span class="orbit" id="orbit" aria-hidden="true">
+        <span class="tilt"><span class="ring" id="ring"></span></span> <!-- cards are built by the script below -->
+        <svg class="spark" viewBox="0 0 100 100">
+          <defs>
+            <!-- green liquid inside the glass -->
+            <radialGradient id="sparkCore" cx="56%" cy="60%" r="58%">
+              <stop offset="0" stop-color="#F2FFDC"/>
+              <stop offset=".22" stop-color="#C4FB8C"/>
+              <stop offset=".55" stop-color="#6FD83A"/>
+              <stop offset="1" stop-color="#1B5E12"/>
+            </radialGradient>
+            <!-- shade on the lower-right faces for volume -->
+            <linearGradient id="sparkShade" x1="20%" y1="20%" x2="85%" y2="90%">
+              <stop offset=".45" stop-color="#0B2A06" stop-opacity="0"/>
+              <stop offset="1" stop-color="#0B2A06" stop-opacity=".55"/>
+            </linearGradient>
+            <!-- glass sheen on the upper-left faces -->
+            <linearGradient id="sparkSheen" x1="10%" y1="5%" x2="60%" y2="60%">
+              <stop offset="0" stop-color="#fff" stop-opacity=".9"/>
+              <stop offset=".4" stop-color="#fff" stop-opacity=".22"/>
+              <stop offset="1" stop-color="#fff" stop-opacity="0"/>
+            </linearGradient>
+            <!-- rim light -->
+            <linearGradient id="sparkRim" x1="0" y1="0" x2="1" y2="1">
+              <stop offset="0" stop-color="#fff" stop-opacity="1"/>
+              <stop offset=".5" stop-color="#E8FFD0" stop-opacity=".25"/>
+              <stop offset="1" stop-color="#C8FF96" stop-opacity=".8"/>
+            </linearGradient>
+            <radialGradient id="sparkGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0" stop-color="#FAFFF0" stop-opacity=".95"/>
+              <stop offset="1" stop-color="#B9FA7C" stop-opacity="0"/>
+            </radialGradient>
+            <filter id="sparkSoft" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2.2"/>
+            </filter>
+            <clipPath id="sparkClip"><path d="M50 3C55 33 67 45 97 50 67 55 55 67 50 97 45 67 33 55 3 50 33 45 45 33 50 3Z"/></clipPath>
+          </defs>
+          <g clip-path="url(#sparkClip)">
+            <rect width="100" height="100" fill="url(#sparkCore)"/>
+            <rect width="100" height="100" fill="url(#sparkShade)"/>
+            <!-- refracted glow in the middle -->
+            <circle cx="52" cy="54" r="17" fill="url(#sparkGlow)" filter="url(#sparkSoft)"/>
+            <!-- upper-left facets catch the light -->
+            <path d="M50 3C55 33 67 45 97 50H50Z M3 50C33 45 45 33 50 3V50Z" fill="url(#sparkSheen)"/>
+            <!-- darker inner edge -->
+            <path d="M50 3C55 33 67 45 97 50 67 55 55 67 50 97 45 67 33 55 3 50 33 45 45 33 50 3Z" fill="none" stroke="#0E3A08" stroke-opacity=".45" stroke-width="5" filter="url(#sparkSoft)"/>
+          </g>
+          <path d="M50 3C55 33 67 45 97 50 67 55 55 67 50 97 45 67 33 55 3 50 33 45 45 33 50 3Z" fill="none" stroke="url(#sparkRim)" stroke-width="1.2"/>
+          <!-- specular highlights -->
+          <path d="M47.5 12C48.5 24 49 31 45 39" stroke="#fff" stroke-width="3" stroke-opacity=".55" stroke-linecap="round" fill="none" opacity=".9" filter="url(#sparkSoft)"/>
+          <ellipse cx="46.5" cy="22" rx="1.1" ry="4.5" fill="#fff" opacity=".95" transform="rotate(-6 46.5 22)"/>
+          <ellipse cx="24" cy="48.2" rx="9" ry="1.1" fill="#fff" opacity=".55"/>
+          <circle cx="62" cy="62" r="1.6" fill="#fff" opacity=".5"/>
+        </svg>
+      </span>
     </section>
   </main>
+  <script>
+    (function () {
+      /* Carousel: builds 8 curved cards sized to the ring; the spin itself is a CSS animation */
+      var orbit = document.getElementById('orbit');
+      var ring = document.getElementById('ring');
+      var CARDS = 8, SLICES = 8, GAP = 360 / CARDS;
+      var CORNER = 'url("data:image/svg+xml,' + encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" preserveAspectRatio="none"><rect width="40" height="40" rx="10"/></svg>') + '")';
+      var cols = document.querySelector('.cols'), spark = orbit.querySelector('.spark'), tilt = orbit.querySelector('.tilt');
+      function buildCards(star) {
+        orbit.style.setProperty('--star', star.toFixed(2) + 'px');
+        var r = star / 1.728;              // ring radius, kept in proportion to the star
+        var card = r * 0.42;               // card width and height along the curve (smaller cards)
+        orbit.style.setProperty('--card', card.toFixed(2) + 'px');
+        var arc = card / r;                // card angle in radians
+        var d = arc / SLICES;              // slice angle
+        var w = 2 * r * Math.sin(d / 2) + 1.2;   // slice width (+ overlap hides seams)
+        var html = '';
+        for (var c = 0; c < CARDS; c++) {
+          var k = c % 4 + 1;
+          html += '<span class="tile" style="--img:var(--img-' + k + ');--fill:var(--fill-' + k + ');--corner:' + CORNER.replace(/"/g, '&quot;') + ';transform:rotateY(' + c * GAP + 'deg)">';
+          for (var n = 0; n < SLICES; n++) {
+            var t = (n - (SLICES - 1) / 2) * d;   // slice offset from the card's centre
+            var shade = (0.22 * Math.abs(t) / (arc / 2)).toFixed(3);
+            html += '<span class="slice" style="width:' + w.toFixed(2) + 'px;margin-left:' + (-w / 2).toFixed(2) + 'px;' +
+              'transform:rotateY(' + (t * 180 / Math.PI).toFixed(3) + 'deg) translateZ(' + r.toFixed(2) + 'px);' +
+              '--bx:' + (-n * card / SLICES).toFixed(2) + 'px;--bx-back:' + (-(SLICES - 1 - n) * card / SLICES).toFixed(2) + 'px;--shade:' + shade + '">' +
+              '<i></i><i></i></span>';
+          }
+          html += '</span>';
+        }
+        ring.innerHTML = html;
+      }
+
+      // Painted extent of star + cards over a full turn (cards are measured at 5° steps, held still)
+      function extent() {
+        var faces = ring.querySelectorAll('.slice i:first-child'), b = spark.getBoundingClientRect();
+        var e = { l: b.left, r: b.right, t: b.top, b: b.bottom };
+        for (var a = 0; a < 360; a += 5) {
+          ring.style.transform = 'rotateY(' + (22.5 - a) + 'deg)';
+          for (var f = 0; f < faces.length; f++) {
+            b = faces[f].getBoundingClientRect();
+            e.l = Math.min(e.l, b.left); e.r = Math.max(e.r, b.right); e.t = Math.min(e.t, b.top); e.b = Math.max(e.b, b.bottom);
+          }
+        }
+        return e;
+      }
+      function hold(still) {
+        [ring, tilt, spark].forEach(function (el) { el.style.animation = still ? 'none' : ''; el.style.transform = ''; });
+        if (still) tilt.style.transform = 'rotateZ(-35deg) rotateX(-28deg)';
+      }
+
+      // Size the carousel so star + cards span exactly the column's width, centre it,
+      // make the box tall enough that it stays below the heading, and put its lowest point on the bottom line.
+      // Each step is measured twice: perspective makes the size and position slightly non-linear.
+      function buildOrbit() {
+        var col = orbit.parentElement.getBoundingClientRect(), star = col.width * 0.7, e, pass;
+        hold(true);
+        orbit.style.setProperty('--shift', '0px'); orbit.style.setProperty('--drop', '0px');
+        for (pass = 0; pass < 3; pass++) {
+          buildCards(star); hold(true);
+          e = extent(); star *= col.width / (e.r - e.l);
+        }
+        buildCards(star); hold(true);
+        var shift = 0, drop = 0;
+        for (pass = 0; pass < 2; pass++) {
+          e = extent();
+          shift += (col.left + col.right) / 2 - (e.l + e.r) / 2;
+          orbit.style.setProperty('--shift', shift.toFixed(1) + 'px');
+        }
+        // the box (shared with the logo list, so both headings stay on one line) is at least as tall as the carousel
+        cols.style.removeProperty('--box');
+        cols.style.setProperty('--box', Math.max(orbit.getBoundingClientRect().height, e.b - e.t).toFixed(1) + 'px');
+        for (pass = 0; pass < 2; pass++) {
+          e = extent();
+          drop += orbit.getBoundingClientRect().bottom - e.b;
+          orbit.style.setProperty('--drop', drop.toFixed(1) + 'px');
+        }
+        hold(false);
+      }
+
+      buildOrbit();
+      var t;
+      window.addEventListener('resize', function () { clearTimeout(t); t = setTimeout(buildOrbit, 120); });
+    })();
+  </script>
 </body>
 </html>
