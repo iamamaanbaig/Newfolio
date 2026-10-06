@@ -85,27 +85,22 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 .case.on .title { color: #fff; }
 .title:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; }
 /* the active case study's thumbnail opens below its title */
-.thumb { display: grid; grid-template-rows: 0fr; transition: grid-template-rows .5s cubic-bezier(.16, 1, .3, 1), margin .5s cubic-bezier(.16, 1, .3, 1); }
-.thumb > span { min-height: 0; overflow: hidden; }
-.case.on .thumb { grid-template-rows: 1fr; margin-top: calc(16 * var(--u)); }
+.thumb { display: none; }   /* switched instantly; the script glides everything around it (no height animation, so no layout work per frame) */
+.thumb > span { display: block; }
+.case.on .thumb { display: block; margin-top: calc(16 * var(--u)); }
 .ph { display: block; width: calc(240 * var(--u)); height: calc(160 * var(--u)); background: #D9D9D9; } /* placeholder image */
 /* logos: the active case study's company keeps its colours; the others go grey */
 .c2.open .co:not(.on) img { filter: brightness(0) invert(.235); }
 /* green marker on the line beside the active title (placed by the script) */
-.clients::after { content: ""; position: absolute; left: 0; top: var(--mt, 0px); width: 2px; height: calc(28 * var(--u)); background: var(--accent); opacity: 0; transition: opacity .3s ease; }
-.c2.open .clients::after { opacity: 1; }
+.mark { position: absolute; left: 0; top: 0; width: 2px; height: calc(28 * var(--u)); background: var(--accent); opacity: 0; transition: opacity .3s ease; pointer-events: none; will-change: transform; }
+.c2.open .mark { opacity: 1; }
 /* "Scroll to see work", at the bottom, centred on the page (the column's centre is the page's centre) */
 .c2.open .hint { display: flex; flex-direction: column; align-items: center; gap: calc(12 * var(--u)); position: absolute; left: 50%; bottom: 0; translate: -50% 0;
   margin: 0; color: var(--accent); font: 400 calc(16 * var(--u))/1.25 var(--sans); white-space: nowrap; }
 .hint svg { width: calc(24 * var(--u)); height: auto; }
-/* mouse parallax while open: layers drift at different rates (--py is -0.5 to 0.5, set by the script) */
-.c2.open .head { translate: 0 calc(var(--py, 0) * -6 * var(--u)); transition: translate .6s cubic-bezier(.16, 1, .3, 1); }
-.c2.open .clients img, .c2.open .also-label { translate: 0 calc(var(--py, 0) * -12 * var(--u)); transition: translate .8s cubic-bezier(.22, 1, .36, 1), filter .35s ease; }
-.c2.open .title { translate: 0 calc(var(--py, 0) * -18 * var(--u)); transition: translate 1s cubic-bezier(.22, 1, .36, 1), color .35s ease; }
-.c2.open .thumb { translate: 0 calc(var(--py, 0) * -28 * var(--u)); transition: translate 1.2s cubic-bezier(.22, 1, .36, 1), grid-template-rows .5s cubic-bezier(.16, 1, .3, 1), margin .5s cubic-bezier(.16, 1, .3, 1); }
-/* column 3 steps aside while column 2 is open */
-.cols > .c3 { transition: filter .4s ease, opacity .4s ease; }
-.c2.open ~ .c3 { opacity: 0; }
+/* everything that moves gets its own GPU layer, so the glide and the mouse parallax (set by the script) only move layers */
+.c2.open .head, .c2.open .clients img, .c2.open .also-label, .c2.open .title, .c2.open .thumb, .c2.open .end { will-change: transform, translate; }
+.c2.open .clients img { transition: filter .35s ease; }
 /* ---------- Carousel around the glass spark ---------- */
 /* 8 curved cards repeat 4 images (1 2 3 4 1 2 3 4). Swap the files in assets/cards/ to change them. */
 .orbit {
@@ -173,6 +168,7 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 .cols > section { transition: filter .4s ease; }
 .cols > section:not(.on) { filter: brightness(0) invert(.125); }
 .c3:not(.on) .orbit * { animation-play-state: paused; } /* the star and carousel only move while their column is active */
+.c3:not(.on) .slice i + i { filter: none; } /* greyed, the far-side cards' blur can't be seen; dropping it keeps the page smooth while other columns animate */
   @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; }
 }
@@ -230,6 +226,7 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
           </ul></li>
         </ul></li>
         <li class="end">End of the list</li>
+        <li class="mark" aria-hidden="true"></li>
       </ul>
       <p class="hint" aria-hidden="true"><svg viewBox="0 0 24 36" fill="none" stroke="currentColor" stroke-width="1.5"><rect x=".75" y=".75" width="22.5" height="34.5" rx="11.25"/><path d="M12 7v6" stroke-linecap="round"/></svg>Scroll to see work</p>
     </section>
@@ -370,14 +367,14 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
       // Change the layout and animate it (FLIP): every element glides from where it was to where it is now,
       // each layer at its own speed (heading, logos, titles, images), which gives the parallax.
       // Elements that appear rise in from below; elements that disappear leave a fading copy behind.
-      function relayout(change) {
+      function relayout(change, quick) {
         var els = [head].concat(logos, titles, [].slice.call(c2.querySelectorAll('.ph')), [label, endNote, hint]);
         var before = rects(els), lineBefore = list.getBoundingClientRect();
         stop(els); list.getAnimations({ subtree: true }).forEach(function (a) { a.cancel(); });
         var ghosts = [];
         change();
         var after = rects(els), lineAfter = list.getBoundingClientRect();
-        settled = performance.now() + 1600; busy = performance.now() + 900;
+        settled = performance.now() + (quick ? 900 : 1600); busy = performance.now() + (quick ? 450 : 900); kick(1800);
         if (still.matches) return;
         var n = 0;
         els.forEach(function (el, i) {
@@ -385,14 +382,16 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
           if (shown(a) && shown(b)) {
             if (Math.abs(a.top - b.top) < .5 && Math.abs(a.left - b.left) < .5 && Math.abs(a.width - b.width) < .5) return;
             el.animate([{ transform: 'translate(' + (a.left - b.left) + 'px,' + (a.top - b.top) + 'px) scale(' + (a.width / b.width) + ')' }, { transform: 'none' }],
-              { duration: 850 + d * 200 + n * 30, delay: d * 50 + n++ * 25, easing: EASE, fill: 'backwards' });
+              quick ? { duration: 600 + d * 90, delay: d * 25, easing: EASE, fill: 'backwards' }
+                    : { duration: 850 + d * 200 + n * 30, delay: d * 50 + n++ * 25, easing: EASE, fill: 'backwards' });
           } else if (shown(b)) {
             el.animate([{ opacity: 0, transform: 'translateY(' + (50 + d * 40) + 'px)' }, { opacity: 1, transform: 'none' }],
-              { duration: 950 + d * 200, delay: 150 + d * 70 + n++ * 30, easing: EASE, fill: 'backwards' });
+              quick ? { duration: 650 + d * 90, delay: 60 + d * 30, easing: EASE, fill: 'backwards' }
+                    : { duration: 950 + d * 200, delay: 150 + d * 70 + n++ * 30, easing: EASE, fill: 'backwards' });
           } else if (shown(a)) ghost(el, a);
         });
         list.animate([{ transform: 'translateY(' + (lineBefore.top - lineAfter.top) + 'px) scaleY(' + (lineBefore.height / lineAfter.height) + ')' }, { transform: 'none' }],
-          { duration: 1000, easing: EASE, pseudoElement: '::before' });
+          { duration: quick ? 650 : 1000, easing: EASE, pseudoElement: '::before' });
       }
       // a copy of a disappearing element that fades upward where it was
       function ghost(el, r) {
@@ -405,27 +404,32 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
       }
 
       // the active case study: its title is white, its image open, its company logo in colour
-      function pick(li) {
+      function choose(li) {
         cases.forEach(function (c) { c.classList.toggle('on', c === li); });
         c2.querySelectorAll('.co').forEach(function (co) { co.classList.toggle('on', co.contains(li)); });
       }
-      pick(cases[0]);
+      // while open, switching case studies glides everything to its new place (the old image fades, the new one rises)
+      function pick(li) {
+        if (li.classList.contains('on')) return;
+        if (c2.classList.contains('open')) relayout(function () { choose(li); }, true); else choose(li);
+      }
+      choose(cases[0]);
       // view B (pointer reached "Also") or back to view A (pointer reached the folded row at the top); co: the company pointed at
       function setPhase(b, co) {
         var first = (co || c2.querySelector(b ? '.also .co' : '.top .co')).querySelector('.case');
-        relayout(function () { c2.classList.toggle('phase-b', b); pick(first); });
+        relayout(function () { c2.classList.toggle('phase-b', b); choose(first); });
       }
 
       function setOpen(open) {
         clearTimeout(closing);
         if (open === c2.classList.contains('open')) return;
-        if (open || still.matches) { relayout(function () { c2.classList.toggle('open', open); if (!open) { c2.classList.remove('phase-b'); pick(cases[0]); } }); return; }
+        if (open || still.matches) { relayout(function () { c2.classList.toggle('open', open); if (!open) { c2.classList.remove('phase-b'); choose(cases[0]); } }); return; }
         // closing: the open-only elements sink and fade first, then the logos glide back
         var extra = titles.concat([].slice.call(c2.querySelectorAll('.ph')), [label, endNote, hint]);
         extra.forEach(function (el) { el.animate([{ opacity: 1 }, { opacity: 0, transform: 'translateY(16px)' }], { duration: 180, easing: 'ease-in', fill: 'forwards' }); });
         closing = setTimeout(function () {
           stop(extra);
-          relayout(function () { c2.classList.remove('open', 'phase-b'); pick(cases[0]); });
+          relayout(function () { c2.classList.remove('open', 'phase-b'); choose(cases[0]); });
         }, 170);
       }
 
@@ -451,21 +455,26 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
         pick(li);
       }); });
 
-      // the green marker follows the active title (eased, so it slides between titles and rides along as images open and close)
-      var mt = null;
-      (function follow() {
-        if (c2.classList.contains('open')) {
+      // One frame loop, running only while something moves: mouse parallax (layers drift at different rates)
+      // and the green marker following the active title. Both only set transforms, so the browser just moves layers.
+      var mark = c2.querySelector('.mark'), mt = null, cur = 0, goal = 0, until = 0, ticking = false;
+      var layers = [[[head], 6], [logos.concat([label]), 12], [titles, 18], [[].slice.call(c2.querySelectorAll('.thumb')), 28]];
+      function kick(ms) { until = Math.max(until, performance.now() + ms); if (!ticking) { ticking = true; requestAnimationFrame(tick); } }
+      function tick(now) {
+        var open = c2.classList.contains('open'), u = parseFloat(getComputedStyle(head).fontSize) / 24;
+        cur += ((open ? goal : 0) - cur) * .08;   // eased toward the pointer
+        layers.forEach(function (layer) { var y = (cur * -layer[1] * u).toFixed(2) + 'px'; layer[0].forEach(function (el) { el.style.translate = '0 ' + y; }); });
+        if (open) {
           var t = c2.querySelector('.case.on .title').getBoundingClientRect(), l = list.getBoundingClientRect();
-          var target = t.top - l.top + (t.height - parseFloat(getComputedStyle(list, '::after').height)) / 2;
-          mt = mt === null || performance.now() < settled ? target : mt + (target - mt) * .2;
-          list.style.setProperty('--mt', mt.toFixed(1) + 'px');
+          var target = t.top - l.top + (t.height - mark.offsetHeight) / 2;
+          mt = mt === null || now < settled ? target : mt + (target - mt) * .2;
+          mark.style.transform = 'translateY(' + mt.toFixed(2) + 'px)';
         } else mt = null;
-        requestAnimationFrame(follow);
-      })();
-      // mouse parallax while open
+        if (now < until || Math.abs(cur - (open ? goal : 0)) > .001) requestAnimationFrame(tick); else ticking = false;
+      }
       c2.addEventListener('pointermove', function (e) {
         var r = c2.getBoundingClientRect();
-        c2.style.setProperty('--py', ((e.clientY - r.top) / r.height - .5).toFixed(3));
+        goal = (e.clientY - r.top) / r.height - .5; kick(300);
       });
 
       // Active column: the one last hovered, tapped or tabbed into stays active
