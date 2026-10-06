@@ -56,7 +56,8 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
   --img-3: url('assets/cards/notebooklm.jpg'); --img-4: url('assets/cards/figma.jpg');
   --fill-1: #D77655; --fill-2: #74AA9C; --fill-3: #000; --fill-4: #fff; /* shown while the images load */
   position: relative;
-  width: 100%; height: calc(310 * var(--u)); /* same height as the logo list, so both headings share one line */
+  width: calc((100vw - 2 * var(--y) - 4 * var(--x)) / 4); align-self: flex-end; /* the size it had in the 1fr 2fr 1fr grid (300 at 1440), on the column's right edge */
+  height: calc(310 * var(--u)); /* same height as the logo list, so both headings share one line */
   display: grid; place-items: center;
   perspective: 1400px; transform-style: preserve-3d;
   pointer-events: none;
@@ -105,7 +106,7 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
   body { height: auto; overflow: visible; }
   .cols { grid-template-columns: 1fr; row-gap: calc(var(--x) * 2); }
   .note { margin-top: calc(28 * var(--u)); }
-  .orbit { width: min(100%, calc(300 * var(--u))); height: auto; aspect-ratio: 1; }
+  .orbit { width: min(100%, calc(300 * var(--u))); align-self: auto; height: auto; aspect-ratio: 1; }
 }
 .logo:focus-visible { outline: 2px solid var(--accent); outline-offset: 4px; border-radius: 2px; }
   @media (prefers-reduced-motion: reduce) {
