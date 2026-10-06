@@ -46,9 +46,13 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
 .c2, .c3 { display: flex; flex-direction: column; justify-content: flex-end; min-height: 0; }
 .head { margin: 0 0 calc(30 * var(--u)); color: var(--accent); font: 400 calc(24 * var(--u))/1.25 var(--sans); }
 .clients { margin: 0; padding: 0 0 0 calc(36 * var(--u)); list-style: none; border-left: 1px solid var(--line);
-  display: flex; flex-direction: column; justify-content: space-between; height: var(--box, calc(310 * var(--u))); }
-/* each logo at its width in the design (the SVGs aren't drawn at one shared scale) */
-.clients img { display: block; height: auto; width: calc(var(--w) * var(--u)); }
+  display: flex; flex-direction: column; justify-content: space-between;
+  height: calc(var(--box, calc(310 * var(--u))) + 30 * var(--u) - var(--g)); }
+/* title-to-first-logo gap = gap between logos: the heading's 30 margin and the box share six equal gaps around 213 of logo height (32+32+32+32+28+57) */
+.c2 { --g: calc((var(--box, calc(310 * var(--u))) + 30 * var(--u) - 213 * var(--u)) / 6); }
+.c2 .head { margin-bottom: var(--g); }
+/* each logo at its height in the design (the SVGs aren't drawn at one shared scale); JLL is 32 tall and the rest keep their proportion to it */
+.clients img { display: block; width: auto; height: calc(var(--h) * var(--u)); }
 /* ---------- Carousel around the glass spark ---------- */
 /* 8 curved cards repeat 4 images (1 2 3 4 1 2 3 4). Swap the files in assets/cards/ to change them. */
 .orbit {
@@ -133,12 +137,12 @@ body { margin: 0; height: 100vh; height: 100svh; padding: var(--x) var(--y); bac
     <section class="c2" aria-label="Experience">
       <h2 class="head">Experience for judgment.</h2>
       <ul class="clients" aria-label="Companies I've worked with">
-        <li><img src="JJLandLaSalleLogo.svg" alt="JLL Technologies and LaSalle Investment Management" style="--w:259"></li>
-        <li><img src="NokiaLogo.svg" alt="Nokia" style="--w:85"></li>
-        <li><img src="GloballogicLogo.svg" alt="GlobalLogic" style="--w:114"></li>
-        <li><img src="MarlabsLogo.svg" alt="Marlabs" style="--w:95"></li>
-        <li><img src="ZitharaLogo.svg" alt="Zithara.ai" style="--w:96"></li>
-        <li><img src="ExceledgeLogo.svg" alt="Excel Edge" style="--w:79"></li>
+        <li><img src="JJLandLaSalleLogo.svg" alt="JLL Technologies and LaSalle Investment Management" style="--h:32"></li>
+        <li><img src="NokiaLogo.svg" alt="Nokia" style="--h:32"></li>
+        <li><img src="GloballogicLogo.svg" alt="GlobalLogic" style="--h:32"></li>
+        <li><img src="MarlabsLogo.svg" alt="Marlabs" style="--h:32"></li>
+        <li><img src="ZitharaLogo.svg" alt="Zithara.ai" style="--h:28"></li>
+        <li><img src="ExceledgeLogo.svg" alt="Excel Edge" style="--h:57"></li>
       </ul>
     </section>
 
